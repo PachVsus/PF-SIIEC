@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('index') }}">← Volver al catálogo</a>
+<div class="intro"><p class="eyebrow">{{ product.sku }}</p><h1>{{ product.name }}</h1><p>Existencias: <strong>{{ product.stock }}</strong> unidades · {{ 'Activo' if product.active else 'Inactivo' }}</p></div>
+<div class="layout">
+<section class="panel"><h2>Registrar movimiento</h2>
+{% if product.active %}<form method="post" action="{{ url_for('movement', product_id=product.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label for="kind">Tipo</label><select id="kind" name="kind"><option value="entrada">Entrada</option><option value="salida">Salida</option></select>
+<label for="quantity">Cantidad</label><input id="quantity" name="quantity" type="number" min="1" max="2147483647" step="1" required>
+<label for="note">Nota (opcional)</label><input id="note" name="note" maxlength="200" placeholder="Motivo del movimiento">
+<button>Guardar movimiento</button></form>
+{% else %}<p>Reactiva el producto para registrar nuevos movimientos.</p>{% endif %}</section>
+<section class="panel"><h2>Editar producto</h2><form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label for="name">Nombre</label><input id="name" name="name" value="{{ product.name }}" maxlength="120" required>
+<label class="check"><input type="checkbox" name="active" {% if product.active %}checked{% endif %}> Producto activo</label>
+<p>Desactivar conserva sus existencias e historial.</p><button>Guardar cambios</button></form></section>
+</div>
+<section class="panel history"><h2>Historial de movimientos</h2><div class="table-wrap"><table><thead><tr><th>Fecha (UTC)</th><th>Tipo</th><th>Cantidad</th><th>Nota</th></tr></thead><tbody>
+{% for movement in history %}<tr><td>{{ movement.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ movement.kind|capitalize }}</td><td>{{ movement.quantity }}</td><td>{{ movement.note or '—' }}</td></tr>
+{% else %}<tr><td colspan="4" class="empty">Este producto aún no tiene movimientos.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}
